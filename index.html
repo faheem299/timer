@@ -1337,21 +1337,6 @@ document.getElementById('history-clear-btn').addEventListener('click', () => {
   showToast('History cleared.');
 });
 
-// TEMP TEST DATA - remove after testing
-const testDays = [];
-for (let i = 6; i >= 1; i--) {
-  const d = new Date();
-  d.setDate(d.getDate() - i);
-  const dStr = d.toISOString().slice(0, 10);
-  testDays.push({
-    date: dStr,
-    goal: 2,
-    totalStudied: Math.floor(Math.random() * 9000) + 1800, // 30min to 3.5hrs
-    sessions: [{ startLabel: '09:00 AM', studied: 3600 }]
-  });
-}
-history = testDays;
-saveHistory();
 
 init();
 </script>
