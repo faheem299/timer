@@ -1037,7 +1037,7 @@ function renderBarChart() {
   });
 
   const hasData = data.some(d => d.hrs > 0);
-  if (!hasData && history.length === 0) {
+  if (!hasData) {
     chartSection.style.display = 'none';
     return;
   }
