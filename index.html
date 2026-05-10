@@ -717,7 +717,7 @@
 <div class="chart-section" id="chart-section" style="display:none">
   <div class="chart-header">
     <div class="section-title">Daily Study Hours</div>
-    <div class="chart-subtitle" id="chart-subtitle">last 14 days</div>
+    <div class="chart-subtitle" id="chart-subtitle">last 7 days</div>
   </div>
   <div class="bar-chart-wrap">
     <div class="bar-chart" id="bar-chart"></div>
@@ -1011,7 +1011,7 @@ function renderBarChart() {
   // Build last 14 days data (including today)
   const today = todayStr();
   const days = [];
-  for (let i = 13; i >= 0; i--) {
+  for (let i = 6; i >= 0; i--) {
     const d = new Date(today + 'T00:00:00');
     d.setDate(d.getDate() - i);
     const dStr = d.toISOString().slice(0, 10);
