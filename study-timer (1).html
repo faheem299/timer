@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StudyBlock</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --border: #2a2a30;
+    --text: #f0f0f0;
+    --muted: #555560;
+    --accent: #c8f135;
+    --accent-dim: #8aaa22;
+    --filled: #c8f135;
+    --empty: #1e1e24;
+    --hour-done: #3a4a10;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 60px 0;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    max-width: 480px;
+    padding: 28px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .streak-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .streak-badge span {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* ── DATE ── */
+  .date-line {
+    width: 100%;
+    max-width: 480px;
+    padding: 14px 24px 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── GOAL SETUP ── */
+  #setup-screen {
+    width: 100%;
+    max-width: 480px;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .setup-title {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .setup-title em {
+    color: var(--accent);
+    font-style: normal;
+  }
+
+  .goal-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .goal-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .hour-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .chip {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chip:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .chip.selected {
+    border-color: var(--accent);
+    background: #1a2200;
+    color: var(--accent);
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .start-btn:hover { background: #d8ff45; transform: translateY(-1px); }
+  .start-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+  /* ── TIMER SCREEN ── */
+  #timer-screen {
+    width: 100%;
+    max-width: 480px;
+    padding: 28px 24px 0;
+    display: none;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── CLOCK DISPLAY ── */
+  .clock-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .clock {
+    font-family: 'Space Mono', monospace;
+    font-size: 3.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .clock.running .colon { animation: blink 1s step-end infinite; }
+
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  .goal-info {
+    text-align: right;
+  }
+
+  .goal-info .goal-hrs {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .goal-info .pct {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+
+  /* ── PROGRESS BAR GRID ── */
+  .bar-section-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 2px;
+  }
+
+  .hours-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hour-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hour-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    width: 26px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .hour-bar {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(60, 1fr);
+    gap: 1.5px;
+    height: 22px;
+  }
+
+  .minute-cell {
+    border-radius: 2px;
+    background: var(--empty);
+    transition: background 0.4s ease;
+  }
+
+  .minute-cell.filled {
+    background: var(--filled);
+  }
+
+  .minute-cell.hour-complete {
+    background: var(--hour-done);
+  }
+
+  /* subtle pulse on the leading cell */
+  .minute-cell.current {
+    background: var(--accent);
+    animation: pulse-cell 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-cell {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .hour-tick {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    width: 18px;
+    flex-shrink: 0;
+    text-align: left;
+  }
+
+  .hour-tick.done { color: var(--accent); }
+  .hour-tick.pending { color: transparent; }
+
+  /* ── CONTROLS ── */
+  .controls {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-pause {
+    flex: 1;
+    padding: 16px;
+    background: var(--surface);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-pause:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-reset {
+    padding: 16px 20px;
+    background: transparent;
+    color: var(--muted);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-reset:hover { border-color: #ff4444; color: #ff4444; }
+
+  /* ── GOAL REACHED BANNER ── */
+  .goal-banner {
+    background: #1a2200;
+    border: 2px solid var(--accent);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .goal-banner.show { display: flex; }
+
+  .goal-banner .banner-emoji { font-size: 1.6rem; }
+
+  .goal-banner .banner-text { font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+  .goal-banner .banner-sub { font-size: 0.75rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  /* ── HISTORY ── */
+  .history-section {
+    width: 100%;
+    max-width: 480px;
+    padding: 0 24px;
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .history-clear {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .history-clear:hover { color: #ff4444; }
+
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .h-date {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    width: 72px;
+    flex-shrink: 0;
+  }
+
+  .h-bar-wrap {
+    flex: 1;
+    height: 10px;
+    background: var(--empty);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .h-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 5px;
+    transition: width 0.6s ease;
+  }
+
+  .h-bar-fill.missed { background: var(--muted); }
+
+  .h-stats {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-align: right;
+    width: 52px;
+    flex-shrink: 0;
+  }
+
+  .h-stats .h-met { color: var(--accent); }
+
+  .empty-history {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent);
+    color: #0d0d0f;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 30px;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 360px) {
+    .clock { font-size: 3rem; }
+    .chip { width: 44px; height: 44px; font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">StudyBlock</div>
+  <div class="streak-badge">🔥 Streak: <span id="streak-count">0</span> days</div>
+</header>
+
+<div class="date-line" id="date-line">—</div>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-title">Set your<br><em>study goal</em><br>for today.</div>
+
+  <div class="goal-selector">
+    <div class="goal-label">How many hours?</div>
+    <div class="hour-chips" id="hour-chips"></div>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled>Start Session →</button>
+</div>
+
+<!-- TIMER SCREEN -->
+<div id="timer-screen">
+
+  <div class="clock-row">
+    <div class="clock" id="clock-display">00<span class="colon">:</span>00<span class="colon">:</span>00</div>
+    <div class="goal-info">
+      <span class="pct" id="pct-display">0%</span>
+      <div class="goal-hrs" id="goal-hrs-display">of 0h goal</div>
+    </div>
+  </div>
+
+  <div class="goal-banner" id="goal-banner">
+    <div class="banner-emoji">🎯</div>
+    <div>
+      <div class="banner-text">Goal Reached!</div>
+      <div class="banner-sub">Keep going or wrap up — you earned it.</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="bar-section-label">Progress — minute by minute</div>
+    <div class="hours-grid" id="hours-grid"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-pause" id="pause-btn">Pause</button>
+    <button class="btn-reset" id="reset-btn">↺ Reset</button>
+  </div>
+
+  <div class="divider"></div>
+</div>
+
+<!-- HISTORY -->
+<div class="history-section" id="history-section" style="display:none">
+  <div class="history-header">
+    <div class="section-title">Past Sessions</div>
+    <button class="history-clear" id="history-clear-btn">Clear all</button>
+  </div>
+  <div class="history-list" id="history-list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STORAGE KEYS ──
+const KEYS = {
+  state: 'sb_state',
+  history: 'sb_history',
+  streak: 'sb_streak',
+};
+
+// ── STATE ──
+let state = {
+  goal: 0,           // hours
+  startTime: null,   // epoch ms when last started
+  accumulated: 0,    // seconds accumulated before last start
+  running: false,
+  date: todayStr(),  // YYYY-MM-DD
+  goalReached: false,
+};
+
+let history = []; // [{date, studied (sec), goal (hrs)}]
+let streak = 0;
+let tickInterval = null;
+
+// ── UTILS ──
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function fmtDate(str) {
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function fmtHHMMSS(totalSec) {
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── PERSISTENCE ──
+function saveState() {
+  localStorage.setItem(KEYS.state, JSON.stringify(state));
+}
+
+function saveHistory() {
+  localStorage.setItem(KEYS.history, JSON.stringify(history));
+}
+
+function saveStreak() {
+  localStorage.setItem(KEYS.streak, String(streak));
+}
+
+function load() {
+  const raw = localStorage.getItem(KEYS.state);
+  if (raw) state = JSON.parse(raw);
+
+  const hRaw = localStorage.getItem(KEYS.history);
+  if (hRaw) history = JSON.parse(hRaw);
+
+  const sRaw = localStorage.getItem(KEYS.streak);
+  if (sRaw) streak = parseInt(sRaw) || 0;
+}
+
+// ── DAILY RESET ──
+function checkDayRollover() {
+  const today = todayStr();
+  if (state.date && state.date !== today) {
+    // Archive yesterday
+    const studied = getElapsedSec();
+    history.unshift({ date: state.date, studied, goal: state.goal });
+    if (history.length > 60) history = history.slice(0, 60);
+    saveHistory();
+
+    // Update streak
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().slice(0, 10);
+
+    if (state.date === yStr && state.goal > 0 && studied >= state.goal * 3600) {
+      streak++;
+    } else if (state.date !== yStr) {
+      streak = 0;
+    }
+    saveStreak();
+
+    // Reset
+    state = { goal: 0, startTime: null, accumulated: 0, running: false, date: today, goalReached: false };
+    saveState();
+  }
+}
+
+// ── ELAPSED ──
+function getElapsedSec() {
+  let total = state.accumulated;
+  if (state.running && state.startTime) {
+    total += Math.floor((Date.now() - state.startTime) / 1000);
+  }
+  return total;
+}
+
+// ── GRID RENDER ──
+function buildGrid() {
+  const grid = document.getElementById('hours-grid');
+  grid.innerHTML = '';
+  const goal = state.goal || 1;
+
+  // Show goal hours + 1 extra row always (so user sees next empty bar)
+  const rows = goal;
+  for (let h = 0; h < rows; h++) {
+    const row = document.createElement('div');
+    row.className = 'hour-row';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'hour-label';
+    lbl.textContent = `${h+1}h`;
+
+    const bar = document.createElement('div');
+    bar.className = 'hour-bar';
+    bar.id = `hour-bar-${h}`;
+
+    for (let m = 0; m < 60; m++) {
+      const cell = document.createElement('div');
+      cell.className = 'minute-cell';
+      cell.id = `cell-${h}-${m}`;
+      bar.appendChild(cell);
+    }
+
+    const tick = document.createElement('div');
+    tick.className = 'hour-tick pending';
+    tick.id = `tick-${h}`;
+    tick.textContent = '✓';
+
+    row.appendChild(lbl);
+    row.appendChild(bar);
+    row.appendChild(tick);
+    grid.appendChild(row);
+  }
+}
+
+function updateGrid(elapsedSec) {
+  const totalMinutes = Math.floor(elapsedSec / 60);
+  const currentSecInMinute = elapsedSec % 60;
+  const goal = state.goal || 1;
+
+  for (let h = 0; h < goal; h++) {
+    const hourStart = h * 60; // minute index
+    const hourEnd = hourStart + 60;
+    const hourComplete = totalMinutes >= hourEnd;
+    const tick = document.getElementById(`tick-${h}`);
+
+    for (let m = 0; m < 60; m++) {
+      const cell = document.getElementById(`cell-${h}-${m}`);
+      if (!cell) continue;
+      const minuteIndex = hourStart + m;
+
+      cell.classList.remove('filled', 'current', 'hour-complete');
+
+      if (hourComplete) {
+        cell.classList.add('hour-complete');
+      } else if (minuteIndex < totalMinutes) {
+        cell.classList.add('filled');
+      } else if (minuteIndex === totalMinutes && state.running) {
+        cell.classList.add('current');
+      }
+    }
+
+    if (tick) {
+      if (hourComplete) {
+        tick.className = 'hour-tick done';
+      } else {
+        tick.className = 'hour-tick pending';
+      }
+    }
+  }
+}
+
+// ── CLOCK UPDATE ──
+function updateClock() {
+  const elapsed = getElapsedSec();
+  const goal = state.goal || 1;
+  const goalSec = goal * 3600;
+  const pct = Math.min(100, Math.round((elapsed / goalSec) * 100));
+
+  document.getElementById('clock-display').innerHTML =
+    fmtHHMMSS(elapsed).replace(/(\d\d):(\d\d):(\d\d)/, '$1<span class="colon">:</span>$2<span class="colon">:</span>$3');
+
+  if (state.running) {
+    document.getElementById('clock-display').classList.add('running');
+  } else {
+    document.getElementById('clock-display').classList.remove('running');
+  }
+
+  document.getElementById('pct-display').textContent = pct + '%';
+  document.getElementById('goal-hrs-display').textContent = `of ${goal}h goal`;
+
+  updateGrid(elapsed);
+
+  if (!state.goalReached && elapsed >= goalSec) {
+    state.goalReached = true;
+    saveState();
+    document.getElementById('goal-banner').classList.add('show');
+    showToast('🎯 Goal reached! Amazing work!');
+  }
+}
+
+// ── TICK ──
+function startTick() {
+  clearInterval(tickInterval);
+  tickInterval = setInterval(() => {
+    updateClock();
+  }, 1000);
+}
+
+// ── UI SWITCHES ──
+function showTimerScreen() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('timer-screen').style.display = 'flex';
+  document.getElementById('history-section').style.display = 'block';
+}
+
+function showSetupScreen() {
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('timer-screen').style.display = 'none';
+}
+
+// ── HISTORY RENDER ──
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const section = document.getElementById('history-section');
+
+  if (history.length === 0) {
+    if (state.goal === 0) section.style.display = 'none';
+    else {
+      section.style.display = 'block';
+      list.innerHTML = '<div class="empty-history">No past sessions yet.</div>';
+    }
+    return;
+  }
+
+  section.style.display = 'block';
+  list.innerHTML = '';
+
+  history.slice(0, 14).forEach(item => {
+    const goalSec = item.goal * 3600;
+    const pct = Math.min(100, (item.studied / goalSec) * 100);
+    const met = item.studied >= goalSec;
+    const hrs = (item.studied / 3600).toFixed(1);
+
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    el.innerHTML = `
+      <div class="h-date">${fmtDate(item.date)}</div>
+      <div class="h-bar-wrap">
+        <div class="h-bar-fill ${met ? '' : 'missed'}" style="width:${pct}%"></div>
+      </div>
+      <div class="h-stats">
+        <span class="${met ? 'h-met' : ''}">${hrs}h</span><br>/ ${item.goal}h
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// ── STREAK RENDER ──
+function renderStreak() {
+  document.getElementById('streak-count').textContent = streak;
+}
+
+// ── INIT ──
+function init() {
+  load();
+  checkDayRollover();
+
+  // Date line
+  const today = new Date();
+  document.getElementById('date-line').textContent =
+    today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  // Build hour chips
+  const chipsContainer = document.getElementById('hour-chips');
+  [1,2,3,4,5,6,7,8].forEach(h => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (state.goal === h ? ' selected' : '');
+    chip.textContent = h;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      state.goal = h;
+      document.getElementById('start-btn').disabled = false;
+    });
+    chipsContainer.appendChild(chip);
+  });
+
+  renderStreak();
+  renderHistory();
+
+  // If already has a session today
+  if (state.goal > 0) {
+    showTimerScreen();
+    buildGrid();
+    if (state.goalReached) {
+      document.getElementById('goal-banner').classList.add('show');
+    }
+    updateClock();
+    if (state.running) startTick();
+    document.getElementById('pause-btn').textContent = state.running ? 'Pause' : 'Resume';
+  }
+}
+
+// ── EVENTS ──
+document.getElementById('start-btn').addEventListener('click', () => {
+  if (!state.goal) return;
+  state.startTime = Date.now();
+  state.accumulated = 0;
+  state.running = true;
+  state.date = todayStr();
+  saveState();
+
+  showTimerScreen();
+  buildGrid();
+  updateClock();
+  startTick();
+  renderHistory();
+
+  document.getElementById('pause-btn').textContent = 'Pause';
+});
+
+document.getElementById('pause-btn').addEventListener('click', () => {
+  if (state.running) {
+    // Pause: accumulate
+    state.accumulated += Math.floor((Date.now() - state.startTime) / 1000);
+    state.startTime = null;
+    state.running = false;
+    clearInterval(tickInterval);
+    document.getElementById('pause-btn').textContent = 'Resume';
+    document.getElementById('clock-display').classList.remove('running');
+    showToast('Session paused.');
+  } else {
+    // Resume
+    state.startTime = Date.now();
+    state.running = true;
+    startTick();
+    document.getElementById('pause-btn').textContent = 'Pause';
+    showToast('Session resumed!');
+  }
+  saveState();
+  updateClock();
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (!confirm('Reset today\'s session? Progress will be saved to history.')) return;
+
+  const studied = getElapsedSec();
+  if (studied > 60) {
+    history.unshift({ date: state.date, studied, goal: state.goal });
+    if (history.length > 60) history = history.slice(0, 60);
+    saveHistory();
+  }
+
+  clearInterval(tickInterval);
+  state = { goal: 0, startTime: null, accumulated: 0, running: false, date: todayStr(), goalReached: false };
+  saveState();
+
+  // Rebuild chips so none are selected
+  const chipsContainer = document.getElementById('hour-chips');
+  chipsContainer.innerHTML = '';
+  [1,2,3,4,5,6,7,8].forEach(h => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = h;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      state.goal = h;
+      document.getElementById('start-btn').disabled = false;
+    });
+    chipsContainer.appendChild(chip);
+  });
+
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('goal-banner').classList.remove('show');
+  document.getElementById('history-section').style.display = 'none';
+
+  showSetupScreen();
+  renderHistory();
+  renderStreak();
+  showToast('Session reset. See you next round!');
+});
+
+document.getElementById('history-clear-btn').addEventListener('click', () => {
+  if (!confirm('Clear all history?')) return;
+  history = [];
+  streak = 0;
+  saveHistory();
+  saveStreak();
+  renderHistory();
+  renderStreak();
+  showToast('History cleared.');
+});
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
