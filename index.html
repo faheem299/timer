@@ -1042,12 +1042,6 @@ function renderBarChart() {
     return { date: d, hrs: 0, goal: 0, isToday: false };
   });
 
-  const hasData = data.some(d => d.hrs > 0);
-  if (!hasData) {
-    chartSection.style.display = 'none';
-    return;
-  }
-
   chartSection.style.display = 'block';
 
   const maxHrs = Math.max(...data.map(d => d.hrs), 1);
