@@ -1001,6 +1001,9 @@ function showTimerScreen() {
 function showSetupScreen() {
   document.getElementById('setup-screen').style.display = 'flex';
   document.getElementById('timer-screen').style.display = 'none';
+  renderBarChart();
+  renderHistory();
+
 }
 
 // ── BAR CHART ──
