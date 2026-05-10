@@ -1023,13 +1023,16 @@ function renderBarChart() {
   history.forEach(h => { histMap[h.date] = h; });
 
   // Today's current total
-  const todayTotal = getTodayTotalSec();
+
   const todayGoal = state.goal;
 
   // Build data array
   const data = days.map(d => {
     if (d === today) {
-      return { date: d, hrs: todayTotal / 3600, goal: todayGoal, isToday: true };
+      const todayHistory = histMap[d];
+      const activeSec = getTodayTotalSec();
+      const totalSec = (todayHistory ? todayHistory.totalStudied : 0) + activeSec;
+      return { date: d, hrs: totalSec / 3600, goal: todayGoal || (todayHistory ? todayHistory.goal : 0), isToday: true };
     }
     const h = histMap[d];
     if (h) return { date: d, hrs: h.totalStudied / 3600, goal: h.goal, isToday: false };
